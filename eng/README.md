@@ -1,8 +1,8 @@
 ## Carrot Software
 
-> [Carrot Broadcast](https://www.carrot.software/eng/) Documentation.
+> [Carrot Broadcast](https://www.carrot.software/eng/) Products Documentation.
 
-## Products
+## Documentation
 
-- [Carrot Engine](https://carrotsoftware.github.io/docs/)
-- [Scripting](https://carrotsoftware.github.io/scripting/)
+- [Carrot Engine](https://carrotsoftware.github.io/docs/#/eng/)
+- [Scripting](https://carrotsoftware.github.io/scripting/#/eng/)
