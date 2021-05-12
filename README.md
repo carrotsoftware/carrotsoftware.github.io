@@ -1,6 +1,6 @@
 ## Carrot Software
 
-> Carrot Broadcast Documentation.
+> [Carrot Broadcast](https://www.carrot.software/eng/) Documentation.
 
 ## Products
 
