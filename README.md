@@ -1,8 +1,8 @@
-## Carrot Software
+## Программное обеспечение Кэрот
 
-> [Carrot Broadcast](https://www.carrot.software/eng/) Documentation.
+> Документация [Кэрот Бродкаст](https://www.carrot.software/).
 
-## Products
+## Продукты
 
 - [Carrot Engine](https://carrotsoftware.github.io/docs/)
 - [Scripting](https://carrotsoftware.github.io/scripting/)
