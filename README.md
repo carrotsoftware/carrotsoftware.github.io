@@ -4,5 +4,5 @@
 
 ## Документация
 
-- [Carrot Engine](https://carrotsoftware.github.io/docs/)
+- [Руководство пользователя](https://carrotsoftware.github.io/docs/)
 - [Scripting](https://carrotsoftware.github.io/scripting/)
