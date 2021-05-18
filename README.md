@@ -6,3 +6,4 @@
 
 - [Руководство пользователя](https://carrotsoftware.github.io/docs/)
 - [Scripting](https://carrotsoftware.github.io/scripting/)
+- [База знаний](https://carrotsoftware.github.io/knowledgebase/)
