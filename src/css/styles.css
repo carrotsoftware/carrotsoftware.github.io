@@ -1,0 +1,577 @@
+/* ==========================================================================
+   Carrot Documentation — landing page styles
+
+   Layout: a row of three glass buttons sits exactly in the middle of the
+   screen, the logo sits halfway between the top edge and the buttons, and the
+   caption is pinned to the bottom. When the buttons stack into a column, the
+   logo and the first button stay where they were. When the window is made
+   shorter from the bottom, the logo and buttons don't move — only the caption
+   rises, until its gap equals the gap between the logo and the buttons; after
+   that the window simply crops the page.
+
+   The background and the "liquid glass" are drawn with WebGL (main.js).
+   Without WebGL: background.webp and glass via backdrop-filter.
+   Design mockup: 1400 × 900.
+   ========================================================================== */
+
+/* Inter (SIL Open Font License) lives in assets/fonts: a variable font, one
+   file per character set covers every weight. Over the live WebGL background
+   Chrome turns ClearType off, and Inter looks smooth with grayscale smoothing */
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url("../../assets/fonts/inter-cyrillic.woff2") format("woff2");
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url("../../assets/fonts/inter-latin.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC,
+    U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215,
+    U+FEFF, U+FFFD;
+}
+
+:root {
+  color-scheme: dark;
+
+  /* Color */
+  --color-text: #ffffff;
+  --color-page: #4a4a4a;                         /* page color while the background loads */
+  --glass-fill: rgba(255, 255, 255, 0.07);
+  --glass-fill-fallback: rgba(120, 120, 120, 0.55); /* when backdrop-filter is not supported */
+  --glass-border: rgba(255, 255, 255, 0.22);
+  --glass-border-hover: rgba(255, 255, 255, 0.6);
+  --glass-highlight: rgba(255, 255, 255, 0.18);
+  --glass-shadow: rgba(0, 0, 0, 0.18);
+  --glass-blur: 16px;                            /* glass blur: used by both WebGL and the fallback */
+  --glow: rgba(255, 255, 255, 0.38);
+  --glow-soft: rgba(255, 255, 255, 0.14);
+  --focus-ring: rgba(255, 255, 255, 0.9);        /* keyboard focus outline */
+
+  /* Section transition: haze in the section color (colors — SECTION_COLORS in main.js) */
+  --curtain-blur: 36px;                          /* blur of everything under the haze */
+  --haze-light: rgba(255, 255, 255, 0.06);       /* light puffs inside the haze */
+  --haze-dark: rgba(0, 0, 0, 0.03);              /* dark puffs inside the haze */
+
+  /* Outline of the pressed button over the fill */
+  --press-rim-light: rgba(255, 255, 255, 0.7);   /* highlight at the top left */
+  --press-rim-dim: rgba(255, 255, 255, 0.12);    /* along the sides */
+  --press-rim-mid: rgba(255, 255, 255, 0.35);    /* at the bottom right */
+
+  /* Other elements dissolving during the transition */
+  --dissolve-duration: 0.5s;
+  --dissolve-blur: 12px;
+  --dissolve-scale: 0.96;
+
+  /* Typography */
+  --font-main: "Inter", Arial, "Helvetica Neue", Helvetica, sans-serif;
+  --text-button: 1.25rem;  /* 20px */
+  --text-caption: 1rem;    /* 16px */
+
+  /* Sizes */
+  --page-padding: 25px;
+  --logo-size: 188px;
+  --logo-gap: 30px;        /* between the logo circle and the wordmark */
+  --button-width: 350px;
+  --button-height: 100px;
+  --button-radius: 25px;
+  --button-gap: 40px;
+  --wordmark-height: 56.5px; /* height of the CARROT BROADCAST wordmark at 182px wide */
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* When the window is shorter than the page, the page can still be scrolled,
+   but the scrollbar is hidden — the window simply crops the page */
+html {
+  scrollbar-width: none;
+}
+
+html::-webkit-scrollbar {
+  display: none;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-main);
+  line-height: normal;
+  color: var(--color-text);
+  background: var(--color-page) url("../../assets/images/background.webp") center / cover no-repeat fixed;
+}
+
+/* ---------- Language ----------
+   index.html holds both versions side by side: every text exists as
+   <span lang="en"> and <span lang="ru">. lang.js sets <html lang> before the
+   first paint, and the inactive version is hidden here */
+
+html[lang="ru"] body [lang="en"],
+html:not([lang="ru"]) body [lang="ru"] {
+  display: none;
+}
+
+/* Hidden on screen but read by screen readers */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ---------- Background ---------- */
+
+/* The canvas is anchored to the top left corner. main.js sizes it to the
+   largest window seen, so a smaller window crops it instead of squeezing it */
+.backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: -1;
+  display: block;
+  width: var(--canvas-width, 100%);
+  height: var(--canvas-height, 100%);
+}
+
+/* Without WebGL: a static background image, and the colorful mode is a CSS gradient */
+.no-webgl .backdrop {
+  display: none;
+}
+
+.no-webgl.is-vivid body {
+  background: linear-gradient(120deg, #8a3fb8, #4f9dbd, #8fbf5f, #c46a6a, #8a3fb8) 0 0 / 400% 400% fixed;
+  animation: vivid-fallback 18s linear infinite;
+}
+
+@keyframes vivid-fallback {
+  to {
+    background-position: 400% 0;
+  }
+}
+
+/* ---------- Page ---------- */
+
+/* Three rows: logo — buttons — caption.
+   --layout is the tallest window height seen on this screen (set by main.js;
+   without it, the window height). The top row is half of it minus half
+   a button: the row of buttons is centered and the logo sits halfway above it.
+   That is why nothing but the caption moves when the window gets shorter.
+   --gap is the space above the logo and between the logo and the buttons;
+   the same space is the minimum between the buttons and the caption.
+   It is never less than 25px (--page-padding) */
+.page {
+  --layout: var(--layout-height, 100vh);
+  --logo-block: calc(var(--logo-size) + var(--logo-gap) + var(--wordmark-height));
+  --top: max(
+    calc(var(--layout) / 2 - var(--button-height) / 2),
+    calc(var(--logo-block) + 2 * var(--page-padding))
+  );
+  --gap: calc((var(--top) - var(--logo-block)) / 2);
+  min-height: 100%;
+  display: grid;
+  grid-template-rows: var(--top) auto 1fr;
+  justify-items: center;
+  padding-inline: var(--page-padding);
+  text-align: center;
+}
+
+.header {
+  grid-row: 1;
+  align-self: center;
+}
+
+.hero {
+  grid-row: 2;
+  width: 100%;
+}
+
+.footer {
+  grid-row: 3;
+  align-self: end;
+  padding-top: var(--gap);
+  padding-bottom: var(--page-padding);
+}
+
+/* ---------- Glass ---------- */
+
+/* Fallback without WebGL: blur plus an outline */
+.glass {
+  background-color: var(--glass-fill-fallback);
+  border: 1px solid var(--glass-border);
+  box-shadow:
+    inset 0 1px 0 var(--glass-highlight),
+    0 8px 24px var(--glass-shadow);
+}
+
+@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .glass {
+    background-color: var(--glass-fill);
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    backdrop-filter: blur(var(--glass-blur));
+  }
+}
+
+/* With WebGL the shader draws the glass, outline, shadow and glow — the element itself is transparent */
+.has-webgl .glass,
+.has-webgl .glass:hover,
+.has-webgl .glass:focus-visible {
+  background-color: transparent;
+  border-color: transparent;
+  box-shadow: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+/* ---------- Logo ---------- */
+
+.logo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--logo-gap);
+}
+
+.logo__mark {
+  width: var(--logo-size);
+  height: var(--logo-size);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border-radius: 50%;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  --glow-shadow:
+    inset 0 1px 0 var(--glass-highlight),
+    0 0 0 1px var(--glow-soft),
+    0 0 22px var(--glow),
+    0 0 70px var(--glow-soft);
+  transition:
+    border-color 0.3s ease,
+    box-shadow 0.3s ease,
+    transform 0.2s ease,
+    opacity var(--dissolve-duration) ease,
+    filter var(--dissolve-duration) ease,
+    scale var(--dissolve-duration) ease;
+}
+
+.logo__mark:active {
+  transform: scale(0.96);
+}
+
+.logo__icon {
+  display: block;
+  width: 130px;
+  height: 117px;
+  pointer-events: none;
+}
+
+.logo__title {
+  margin: 0;
+  font-size: inherit;
+  font-weight: inherit;
+  line-height: 0;
+}
+
+.logo__wordmark {
+  display: block;
+  width: 182px;
+  max-width: 100%;
+  height: auto;
+}
+
+/* ---------- Buttons ---------- */
+
+.nav {
+  width: 100%;
+}
+
+/* Button sizes and the gap between them never change. Only two states:
+   all in a row or all stacked (see "Responsive") */
+.nav__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: stretch;
+  justify-content: center;
+  gap: var(--button-gap);
+}
+
+.nav__item {
+  flex: 0 0 var(--button-width);
+  max-width: 100%;
+  display: flex;
+}
+
+/* Button label and its copy over the fill while the button is pressed (.press-label) */
+.button,
+.press-label {
+  padding: 20px 10px;
+  font-size: var(--text-button);
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.button {
+  width: 100%;
+  height: var(--button-height);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--button-radius);
+  text-decoration: none;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+  -webkit-tap-highlight-color: transparent;
+  --glow-shadow:
+    inset 0 1px 0 var(--glass-highlight),
+    0 0 0 1px var(--glow-soft),
+    0 0 18px var(--glow),
+    0 0 56px var(--glow-soft);
+  transition:
+    border-color 0.3s ease,
+    box-shadow 0.3s ease,
+    opacity var(--dissolve-duration) ease,
+    filter var(--dissolve-duration) ease,
+    scale var(--dissolve-duration) ease;
+}
+
+/* Glow on keyboard focus and on hover. Hover only where there is a mouse:
+   on touch screens :hover sticks after a tap.
+   With WebGL the shader draws the glow and the CSS shadow is off (see "Glass") */
+.logo__mark:focus-visible,
+.button:focus-visible {
+  border-color: var(--glass-border-hover);
+  box-shadow: var(--glow-shadow);
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 4px;
+}
+
+@media (hover: hover) {
+  .logo__mark:hover,
+  .button:hover {
+    border-color: var(--glass-border-hover);
+    box-shadow: var(--glow-shadow);
+  }
+}
+
+.curtain.is-active + .press-label {
+  display: flex;
+}
+
+/* The pressed button's own label hides under the fill — the copy over the curtain replaces it */
+.button__label {
+  transition: opacity 0.15s ease;
+}
+
+.button.is-pressed .button__label {
+  opacity: 0;
+}
+
+/* ---------- Transition: haze in the section color ----------
+   A full-screen layer: a translucent section color that blurs everything under
+   it, with slowly drifting light and dark puffs. On press it fills the button
+   from the edges to the center, then bursts out to cover the whole screen. */
+
+.curtain {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  overflow: hidden;
+  -webkit-backdrop-filter: blur(var(--curtain-blur));
+  backdrop-filter: blur(var(--curtain-blur));
+  pointer-events: none;
+  visibility: hidden;
+}
+
+.curtain.is-active {
+  visibility: visible;
+}
+
+.haze {
+  position: absolute;
+  inset: 0;
+  transform:
+    translate(var(--haze-x, 0px), var(--haze-y, 0px))
+    scale(var(--haze-scale, 1));
+}
+
+.haze__puff {
+  position: absolute;
+  width: 70vmax;
+  height: 70vmax;
+  margin: -35vmax 0 0 -35vmax;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, var(--puff-color), transparent);
+  animation: var(--puff-drift) var(--puff-duration) ease-in-out infinite alternate;
+}
+
+.haze__puff:nth-child(1) { left: 28%; top: 32%; --puff-color: var(--haze-light); --puff-drift: haze-drift-a; --puff-duration: 9s; }
+.haze__puff:nth-child(2) { left: 70%; top: 26%; --puff-color: var(--haze-dark);  --puff-drift: haze-drift-b; --puff-duration: 11s; }
+.haze__puff:nth-child(3) { left: 62%; top: 74%; --puff-color: var(--haze-light); --puff-drift: haze-drift-c; --puff-duration: 10s; }
+.haze__puff:nth-child(4) { left: 88%; top: 60%; --puff-color: var(--haze-light); --puff-drift: haze-drift-b; --puff-duration: 13s; }
+.haze__puff:nth-child(5) { left: 20%; top: 80%; --puff-color: var(--haze-dark);  --puff-drift: haze-drift-a; --puff-duration: 12s; }
+
+@keyframes haze-drift-a {
+  0%   { transform: translate(0, 0) scale(1); }
+  50%  { transform: translate(14vmin, -9vmin) scale(1.15); }
+  100% { transform: translate(-8vmin, 11vmin) scale(0.9); }
+}
+
+@keyframes haze-drift-b {
+  0%   { transform: translate(0, 0) scale(1.1); }
+  50%  { transform: translate(-12vmin, 8vmin) scale(0.92); }
+  100% { transform: translate(9vmin, -12vmin) scale(1.05); }
+}
+
+@keyframes haze-drift-c {
+  0%   { transform: translate(0, 0) scale(0.95); }
+  50%  { transform: translate(10vmin, 10vmin) scale(1.12); }
+  100% { transform: translate(-13vmin, -6vmin) scale(1); }
+}
+
+/* Copy of the pressed button's label and outline over the curtain. It lives
+   outside .curtain so the curtain's mask and blur don't affect it; it fades
+   out as the curtain expands */
+.press-label {
+  position: fixed;
+  z-index: 11;
+  display: none;
+  pointer-events: none;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+/* Glass-like outline: a bright highlight at the top left that almost disappears along the sides */
+.press-label::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  padding: 1px;
+  border-radius: inherit;
+  background: linear-gradient(150deg,
+    var(--press-rim-light) 0%,
+    var(--press-rim-dim) 35%,
+    var(--press-rim-dim) 65%,
+    var(--press-rim-mid) 100%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+}
+
+/* Dissolving into the background during the transition (main.js sets the class) */
+.logo__title,
+.caption {
+  transition:
+    opacity var(--dissolve-duration) ease,
+    filter var(--dissolve-duration) ease,
+    scale var(--dissolve-duration) ease;
+}
+
+.is-dissolving {
+  opacity: 0;
+  filter: blur(var(--dissolve-blur));
+  scale: var(--dissolve-scale);
+  pointer-events: none;
+}
+
+/* ---------- Caption ---------- */
+
+.caption {
+  margin: 0;
+  font-size: var(--text-caption);
+  font-weight: 400;
+}
+
+/* ---------- Responsive ---------- */
+
+/* Stacked buttons. main.js puts .is-stacked on <html> when the buttons no
+   longer fit in a row with one button gap on each side (three buttons:
+   3 × 350 + 4 × 40 = 1210px) and computes that from --button-width,
+   --button-gap and the number of buttons. The page layout stays the same as
+   for the row: the logo and the first button keep their place, the other
+   buttons go below the first one */
+.is-stacked .nav__list {
+  flex-direction: column;
+  align-items: center;
+}
+
+.is-stacked .nav__item {
+  flex: none;
+  width: 100%;
+  max-width: var(--button-width);
+}
+
+/* The same breakpoint as a fallback for when JavaScript is off. If you add a
+   button, update the number here: 4 × 350 + 5 × 40 = 1600px */
+@media (max-width: 1209.98px) {
+  html:not(.has-layout-script) .nav__list {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  html:not(.has-layout-script) .nav__item {
+    flex: none;
+    width: 100%;
+    max-width: var(--button-width);
+  }
+}
+
+/* Windows high contrast mode: the WebGL background and glass are hidden,
+   the logo and buttons get a system border, focus uses the system color */
+@media (forced-colors: active) {
+  .backdrop {
+    display: none;
+  }
+
+  .glass,
+  .has-webgl .glass,
+  .has-webgl .glass:hover,
+  .has-webgl .glass:focus-visible {
+    border: 1px solid ButtonText;
+  }
+
+  .logo__mark:focus-visible,
+  .button:focus-visible {
+    outline-color: Highlight;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .button,
+  .logo__mark,
+  .logo__title,
+  .caption {
+    transition: none;
+  }
+
+  .logo__mark:active {
+    transform: none;
+  }
+
+  .no-webgl.is-vivid body {
+    animation: none;
+  }
+}
